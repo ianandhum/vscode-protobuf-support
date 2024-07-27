@@ -15,7 +15,6 @@ If protols is not available in PATH, configure `protols.path` in Extension Setti
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
 
 ### 1.0.0
 
