@@ -1,4 +1,4 @@
-# Proto3 Language Support (Protols)
+# Protobuf Language Support (Protols)
 
 
 This extension provides language support for proto3 Protocol Buffers including syntax highlighting, snippets and language features.
