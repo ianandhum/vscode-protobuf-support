@@ -1,6 +1,13 @@
 import which from 'which';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import {
+	LanguageClient,
+	LanguageClientOptions,
+	ServerOptions,
+	TransportKind
+} from 'vscode-languageclient/node';
+
 
 const PROTOLS_CONFIG_PATH = "protobuf-support.protols";
 const PROTOLS_BIN = "protols";
@@ -12,6 +19,8 @@ interface ProtolsCommand {
 }
 
 var disableWarnings = false;
+let client: LanguageClient;
+
 
 async function showProtolsWarning(): Promise<void> {
     let openDocsAction = "Open Documentation";
@@ -67,4 +76,46 @@ export async function getProtolsCommand() : Promise<false | ProtolsCommand> {
         command: protolsPath,
         args: protolsArgs
     };
+}
+
+export function startProtols(cmd: ProtolsCommand) {
+    const serverOptions: ServerOptions = {
+		run: {
+			command: cmd.command,
+			args: cmd.args,
+			transport: TransportKind.stdio
+		},
+		debug: {
+			command: cmd.command,
+			args: cmd.args,
+			transport: TransportKind.stdio
+		}
+	};
+
+	const clientOptions: LanguageClientOptions = {
+		documentSelector: [
+			{ scheme: 'file', language: 'proto3' },
+			{ scheme: 'file', language: 'proto' }
+		],
+	};
+
+	client = new LanguageClient(
+		'protols',
+		'Protols Language Server',
+		serverOptions,
+		clientOptions
+	);
+
+	client.start();
+}
+
+export function stopProtols(): Thenable<void> | undefined {
+    if (!client) {
+		return undefined;
+	}
+	return client.stop();
+}
+
+export function isProtolsStarted(): boolean {
+    return !!client;
 }

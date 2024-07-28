@@ -11,7 +11,7 @@ Install `protols` language server for protobuf from Rust Crates and make sure `p
 cargo install protols
 ```
 
-If protols is not available in PATH, configure `protols.path` in Extension Settings.
+If protols is not available in PATH, configure `protobuf-support.protols.path` in Extension Settings.
 
 
 ## Release Notes

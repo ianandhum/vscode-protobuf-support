@@ -1,56 +1,26 @@
 import * as vscode from 'vscode';
-import {
-	LanguageClient,
-	LanguageClientOptions,
-	ServerOptions,
-	TransportKind
-} from 'vscode-languageclient/node';
 
-import { getProtolsCommand } from './protols';
-
-let client: LanguageClient;
+import { getProtolsCommand, isProtolsStarted, startProtols, stopProtols } from './protols';
 
 export async function activate(context: vscode.ExtensionContext) {
-
-	let protolsCommand = await getProtolsCommand();
-
-	if (!protolsCommand) {
-		return;
-	}
-
-	const serverOptions: ServerOptions = {
-		run: {
-			command: protolsCommand.command,
-			args: protolsCommand.args,
-			transport: TransportKind.stdio
-		},
-		debug: {
-			command: protolsCommand.command,
-			args: protolsCommand.args,
-			transport: TransportKind.stdio
+	let initProtols = async () => {
+		let protolsCommand = await getProtolsCommand();
+		if (protolsCommand) {
+			startProtols(protolsCommand);
 		}
 	};
+	await initProtols();
 
-	const clientOptions: LanguageClientOptions = {
-		documentSelector: [
-			{ scheme: 'file', language: 'proto3' },
-			{ scheme: 'file', language: 'proto' }
-		],
-	};
-
-	client = new LanguageClient(
-		'protols',
-		'Protols Language Server',
-		serverOptions,
-		clientOptions
-	);
-
-	client.start();
+	vscode.window.onDidChangeActiveTextEditor((e) => {
+		if (e === undefined) {
+			return;
+		}
+		if (!isProtolsStarted() && e.document.languageId === "proto3"){
+			initProtols();
+		}
+	});
 }
 
 export function deactivate(): Thenable<void> | undefined {
-	if (!client) {
-		return undefined;
-	}
-	return client.stop();
+	return stopProtols();
 }
