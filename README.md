@@ -16,6 +16,9 @@ If protols is not available in PATH, configure `protobuf-support.protols.path` i
 
 ## Release Notes
 
+### 1.1.1
+* allow protols to start on editor activation
+
 ### 1.1.0
 * Add warning when protols is not installed.
 
