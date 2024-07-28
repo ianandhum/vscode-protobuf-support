@@ -1,6 +1,6 @@
 import which from 'which';
 import * as vscode from 'vscode';
-import * as fs from 'fs'
+import * as fs from 'fs';
 
 const PROTOLS_CONFIG_PATH = "protobuf-support.protols";
 const PROTOLS_BIN = "protols";
@@ -48,10 +48,10 @@ export async function getProtolsCommand() : Promise<false | ProtolsCommand> {
          
          if (binExists) {
             try {
-                fs.accessSync(protolsPath, fs.constants.X_OK)
-                isExecutable = true
+                fs.accessSync(protolsPath, fs.constants.X_OK);
+                isExecutable = true;
             } catch {
-                isExecutable = false
+                isExecutable = false;
             }
          }
 
