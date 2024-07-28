@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-
 import {
 	LanguageClient,
 	LanguageClientOptions,
@@ -7,28 +6,36 @@ import {
 	TransportKind
 } from 'vscode-languageclient/node';
 
+import { getProtolsCommand } from './protols';
+
 let client: LanguageClient;
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
 
-	let protolsPath:string = vscode.workspace.getConfiguration("protols").get("path") || "protols";
-	let protolsArgs:string[] = vscode.workspace.getConfiguration("protols").get("args") || [];
+	let protolsCommand = await getProtolsCommand();
+
+	if (!protolsCommand) {
+		return;
+	}
 
 	const serverOptions: ServerOptions = {
 		run: {
-			command: protolsPath,
-			args: protolsArgs,
+			command: protolsCommand.command,
+			args: protolsCommand.args,
 			transport: TransportKind.stdio
 		},
 		debug: {
-			command: protolsPath,
-			args: protolsArgs,
+			command: protolsCommand.command,
+			args: protolsCommand.args,
 			transport: TransportKind.stdio
 		}
 	};
 
 	const clientOptions: LanguageClientOptions = {
-		documentSelector: [{ scheme: 'file', language: 'proto3' }, {scheme: 'file', language: 'proto'}],
+		documentSelector: [
+			{ scheme: 'file', language: 'proto3' },
+			{ scheme: 'file', language: 'proto' }
+		],
 	};
 
 	client = new LanguageClient(

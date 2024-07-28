@@ -16,6 +16,8 @@ If protols is not available in PATH, configure `protols.path` in Extension Setti
 
 ## Release Notes
 
+### 1.1.0
+* Add warning when protols is not installed.
 
 ### 1.0.0
 

@@ -1,13 +1,13 @@
 {
-  "name": "proto3-protols",
-  "displayName": "Proto3 Language Support (Protols)",
-  "description": "Language features for proto3 protobuf files, syntax highlighting and snippets",
+  "name": "protobuf-support",
+  "displayName": "Protobuf Language Support (Protols)",
+  "description": "Language features for .proto (proto3 protobuf) files, syntax highlighting and snippets",
   "author": "Anandhu Manoj",
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ianandhum/proto3-protols.git"
+    "url": "https://github.com/ianandhum/vscode-protobuf-support.git"
   },
   "publisher": "ianandhum",
   "categories": [
@@ -16,9 +16,11 @@
   "keywords": [
     "proto3",
     "protocol buffers",
+    "protocol buffer",
     "protobuf",
     "grpc",
-    "protols"
+    "protols",
+    ".proto"
   ],
   "engines": {
     "vscode": "^1.91.0"
@@ -54,9 +56,9 @@
     ],
     "configuration": {
       "type": "object",
-      "title": "Proto3 Language Support",
+      "title": "Protobuf Language Support",
       "properties": {
-        "protols": {
+        "protobuf-support.protols": {
           "type": "object",
           "description": "Protols configuration",
           "scope": "resource",
@@ -97,6 +99,7 @@
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
     "@types/vscode": "^1.91.0",
+    "@types/which": "^3.0.4",
     "@typescript-eslint/eslint-plugin": "^7.14.1",
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",
@@ -107,6 +110,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "vscode-languageclient": "^9.0.1"
+    "vscode-languageclient": "^9.0.1",
+    "which": "^4.0.0"
   }
 }
