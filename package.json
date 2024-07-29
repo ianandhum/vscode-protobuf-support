@@ -93,7 +93,12 @@
     "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "prepare": "husky install",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:patch": "standard-version --release-as patch",
+    "release:major": "standard-version --release-as major"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.7",
@@ -106,10 +111,14 @@
     "@vscode/test-electron": "^2.4.0",
     "esbuild": "^0.21.5",
     "eslint": "^8.57.0",
+    "husky": "^8.0.0",
     "npm-run-all": "^4.1.5",
+    "standard-version": "^9.5.0",
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
     "vscode-languageclient": "^9.0.1",
     "which": "^4.0.0"
   }
