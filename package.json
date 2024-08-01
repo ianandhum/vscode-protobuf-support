@@ -4,7 +4,7 @@
   "description": "Language features for .proto (proto3 protobuf) files, syntax highlighting and snippets",
   "author": "Anandhu Manoj",
   "license": "MIT",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/ianandhum/vscode-protobuf-support.git"
