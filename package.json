@@ -101,6 +101,7 @@
     "release:major": "standard-version --release-as major"
   },
   "devDependencies": {
+    "@types/decompress": "^4.2.7",
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
     "@types/vscode": "^1.91.0",
@@ -119,6 +120,8 @@
   "dependencies": {
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@octokit/rest": "^21.0.1",
+    "decompress": "^4.2.1",
     "vscode-languageclient": "^9.0.1",
     "which": "^4.0.0"
   }
