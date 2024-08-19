@@ -18,15 +18,11 @@ Languages features provided by: https://github.com/coder3101/protols
 
 ## Requirements
 
-Extension will prompt automatic installation of protols if not resolvable from `PATH`, 
+By default, extension will prompt automatic installation of `protols`. 
 
-You can choose to install `protols` language server from Rust Crates also,
+You can also install `protols` language server from Rust Crates also, `cargo install protols`
 
-```
-cargo install protols
-```
-
-If protols is not available in PATH, configure `protobuf-support.protols.path` in `settings.json`.
+If protols is not installed to standard PATH, configure `protobuf-support.protols.path` in `settings.json`.
 
 ## Attribution
 
