@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.1](https://github.com/ianandhum/vscode-protobuf-support/compare/v1.2.0...v1.2.1) (2024-08-19)
+
+
+### Bug Fixes
+
+* set vscode engine to 1.60.0 ([0fd8f49](https://github.com/ianandhum/vscode-protobuf-support/commits/0fd8f4970098e1a5282a8c8fde1c77201ac35d64))
+
 ## 1.2.0 (2024-08-01)
 
 
