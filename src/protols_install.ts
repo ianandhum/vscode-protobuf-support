@@ -10,22 +10,24 @@ import { BinaryStatus, PROTOLS_CONFIG_PATH, ProtolsBinaryStatus } from './protol
 
 export async function installProtolsLanguageServer(destination: string): Promise<ProtolsBinaryStatus> {
     if (await getInstallConfirmationFromUser()) {
-        let downloaded = false;
-        await vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: "Downloading protols Language Server",
-            cancellable: false
-        }, async () => {
-            downloaded = await downloadProtolsFromGithub(destination);
-        });
-
-        if (!downloaded) {
-            vscode.window.showErrorMessage(
-                `Failed to download protols Language Server; ".proto" file features will be unavailable.`,
-            );
-            return {
-                status: BinaryStatus.Invalid
-            };
+        try {
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: "Downloading protols Language Server",
+                cancellable: false
+            }, async () => {
+                await downloadProtolsFromGithub(destination);
+            });
+        }  catch(err) {
+            if(err instanceof Error) {
+                vscode.window.showErrorMessage(
+                    `Failed to download protols Language Server; ".proto" file features will be unavailable.\r\n
+                     ${err.message}`,
+                );
+                return {
+                    status: BinaryStatus.Invalid
+                };
+            }
         }
 
         let protolsArgs: string[] = vscode.workspace.getConfiguration(PROTOLS_CONFIG_PATH).get("args") || [];
@@ -65,16 +67,11 @@ async function getInstallConfirmationFromUser(): Promise<boolean> {
     return false;
 }
 
-async function downloadProtolsFromGithub(destination: string): Promise<boolean> {
+async function downloadProtolsFromGithub(destination: string): Promise<void> {
     const { Octokit } = await import("@octokit/rest");
     const octokit = new Octokit();
 
     const assetName = getProtolsGithubAssetName();
-
-    if (!assetName) {
-        console.log("protols: platform not supported");
-        return false;
-    }
 
     const latestRelease = await octokit.repos.getLatestRelease({
         owner: "coder3101",
@@ -90,43 +87,41 @@ async function downloadProtolsFromGithub(destination: string): Promise<boolean> 
             }
         }
     } else {
-        console.log("Github API returned an error: ", latestRelease.status, latestRelease.data);
+        throw new Error(`Unable to get latest release info from Github: ${latestRelease.status} ${latestRelease.data}`);
     }
 
-    if (downloadURL !== "") {
-        const destinationCompressedFile = path.join(destination, assetName);
-        if (!await downloadFileFromURL(downloadURL, destinationCompressedFile)) {
-            return false;
-        }
-        await decompress(destinationCompressedFile, destination);
-        if (os.platform() === "linux") {
-            let protolsExec = path.join(destination, getProtolsPlatformBinaryName());
-            fs.chmodSync(protolsExec, "755");
-        }
-        return true;
+    const destinationCompressedFile = path.join(destination, assetName);
+
+    await downloadFileFromURL(downloadURL, destinationCompressedFile);
+    await decompress(destinationCompressedFile, destination);
+
+    if (os.platform() === "linux") {
+        let protolsExec = path.join(destination, getProtolsPlatformBinaryName());
+        fs.chmodSync(protolsExec, "755");
     }
-    return false;
 }
 
-async function downloadFileFromURL(url: string, destination: string): Promise<boolean> {
+async function downloadFileFromURL(url: string, destination: string): Promise<void> {
     const res = await fetch(url);
     const responseData = res.body;
     if (!res.ok || responseData === null) {
-        console.log("Could not download file: ", res.url, ", status: ", res.status);
-        return false;
+        throw new Error(`Could not download file: ${res.url}, status: ${res.status}`);
     }
+
     const destDir = path.dirname(destination);
     if (!fs.existsSync(destDir)) {
         fs.mkdirSync(destDir);
     }
+
     const fileStream = fs.createWriteStream(destination);
     await finished(Readable.fromWeb(responseData).pipe(fileStream));
-
-    return true;
 }
 
-function getProtolsGithubAssetName(): false | string {
+function getProtolsGithubAssetName(): string {
     const arch = os.arch();
+    if (!["x64", "arm64"].includes(arch)) {
+        throw new Error(`OS arch not supported: ${arch}`);
+    }
     switch (os.platform()) {
         case "linux":
             return `protols-${arch === 'x64' ? "x86_64" : "aarch64"}-unknown-linux-gnu.tar.gz`;
@@ -135,7 +130,8 @@ function getProtolsGithubAssetName(): false | string {
         case "win32":
             return "protols-x86_64-pc-windows-msvc.zip";
     }
-    return false;
+
+    throw new Error(`Platform not supported: ${os.platform()}`);
 }
 
 export function getProtolsPlatformBinaryName(): string {
