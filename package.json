@@ -23,7 +23,7 @@
     ".proto"
   ],
   "engines": {
-    "vscode": "^1.91.0"
+    "vscode": "^1.60.0"
   },
   "activationEvents": [
     "onLanguage:proto3"
