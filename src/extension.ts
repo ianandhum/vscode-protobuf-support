@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 
 import { BinaryStatus, getProtolsCommand, isProtolsStarted, PROTOLS_CONFIG_PATH, startProtols, stopProtols } from './protols';
 import { installProtolsLanguageServer } from './protols_install';
+import { checkForUpdates } from './protols_update';
 
 export async function activate(context: vscode.ExtensionContext) {
-
 	let initProtols = async () => {
 		let protolsBinStatus = await getProtolsCommand(context.globalStorageUri.path);
 
@@ -13,6 +13,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 
 		if (protolsBinStatus.status === BinaryStatus.Ok && protolsBinStatus.command !== undefined) {
+			await checkForUpdates(protolsBinStatus);
 			startProtols(protolsBinStatus.command);
 		}
 	};

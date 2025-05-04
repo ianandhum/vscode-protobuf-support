@@ -8,8 +8,8 @@ import path from 'path';
 
 import { BinaryStatus, PROTOLS_CONFIG_PATH, ProtolsBinaryStatus } from './protols';
 
-export async function installProtolsLanguageServer(destination: string): Promise<ProtolsBinaryStatus> {
-    if (await getInstallConfirmationFromUser()) {
+export async function installProtolsLanguageServer(destination: string, force?: boolean): Promise<ProtolsBinaryStatus> {
+    if (force || await getInstallConfirmationFromUser()) {
         try {
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
@@ -77,7 +77,7 @@ async function downloadProtolsFromGithub(destination: string): Promise<void> {
         owner: "coder3101",
         repo: "protols"
     });
-
+    
     let downloadURL: string = "";
     if (latestRelease.status >= 200 && latestRelease.status < 300) {
         for (const asset of latestRelease.data.assets) {
