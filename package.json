@@ -1,6 +1,6 @@
 {
   "name": "protobuf-support",
-  "displayName": "Protobuf Language Support (Protols)",
+  "displayName": "Protobuf Support (Protols Language Server)",
   "description": "Language features for .proto (proto3 protobuf) files, syntax highlighting and snippets",
   "author": "Anandhu Manoj",
   "license": "MIT",

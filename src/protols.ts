@@ -28,6 +28,7 @@ export interface ProtolsCommand {
 
 export interface ProtolsBinaryStatus {
 	status: BinaryStatus,
+	autoInstalled?: boolean,
 	command?: ProtolsCommand
 }
 
@@ -35,6 +36,7 @@ let client: LanguageClient;
 
 export async function getProtolsCommand(storagePath: string): Promise<ProtolsBinaryStatus> {
 	let protolsPath: string = vscode.workspace.getConfiguration(PROTOLS_CONFIG_PATH).get("path") || PROTOLS_BIN;
+	let autoInstalled = false;
 
 	if (protolsPath !== PROTOLS_BIN) {
 		let status = getBinaryStatus(protolsPath);
@@ -56,6 +58,7 @@ export async function getProtolsCommand(storagePath: string): Promise<ProtolsBin
 			if (status !== BinaryStatus.Ok) {
 				return { status };
 			}
+			autoInstalled = true;
 		}
 	}
 
@@ -63,6 +66,7 @@ export async function getProtolsCommand(storagePath: string): Promise<ProtolsBin
 
 	return {
 		status: BinaryStatus.Ok,
+		autoInstalled,
 		command: {
 			command: protolsPath,
 			args: protolsArgs
