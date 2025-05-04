@@ -22,7 +22,7 @@ async function getCurrentVersion(command: string): Promise<string> {
 }
 
 export async function checkForUpdates(protolsBinStatus: ProtolsBinaryStatus): Promise<void> {
-    if (protolsBinStatus.status !== BinaryStatus.Ok || !protolsBinStatus.command) {
+    if (!protolsBinStatus.autoInstalled || protolsBinStatus.status !== BinaryStatus.Ok || !protolsBinStatus.command) {
         return;
     }
 
