@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/ianandhum/vscode-protobuf-support/compare/v1.2.1...v1.3.0) (2025-05-04)
+
+
+### Features
+
+* add check for updates during activation ([#5](https://github.com/ianandhum/vscode-protobuf-support/issues/5)) ([d19cf4b](https://github.com/ianandhum/vscode-protobuf-support/commits/d19cf4b6518faf48bfc23d05669278a7c8b910de))
+
 ### [1.2.1](https://github.com/ianandhum/vscode-protobuf-support/compare/v1.2.0...v1.2.1) (2024-08-19)
 
 
