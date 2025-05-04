@@ -58,7 +58,6 @@ export async function getProtolsCommand(storagePath: string): Promise<ProtolsBin
 			if (status !== BinaryStatus.Ok) {
 				return { status };
 			}
-
 			autoInstalled = true;
 		}
 	}
