@@ -1,29 +1,93 @@
-# Protobuf Language Support (Protols)
 
-<a href="https://marketplace.visualstudio.com/items?itemName=ianandhum.protobuf-support" title="VS Code Marketplace Installs">
-  <img alt="VS Code Marketplace Installs" src="https://img.shields.io/visual-studio-marketplace/i/ianandhum.protobuf-support">
-</a>
 
-This extension provides language support for proto3 Protocol Buffers including syntax highlighting, snippets and language features.
+<h1>
+  <img src="images/icon.png" alt="Extension Icon" width="32" height="32">&nbsp;&nbsp;
+  Protobuf Language Support for VS Code (Protols)
+</h1>
 
-Languages features provided by: https://github.com/coder3101/protols 
+
+[![VS Code Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/ianandhum.protobuf-support)](https://marketplace.visualstudio.com/items?itemName=ianandhum.protobuf-support)
+
+Easily work with [Protocol Buffers](https://developers.google.com/protocol-buffers) (`.proto` files) in Visual Studio Code. This extension provides rich language support for proto3, including syntax highlighting, code navigation, completions, diagnostics, and helpful snippets.
+
+Powered by the [protols](https://github.com/coder3101/protols) language server.
+
+
+
 
 ## Features
 
-- Syntax Highlighting
-- Snippets
-- Definitions
-- Basic completions
-- Diagnostics
+
+- **Syntax Highlighting** for `.proto` files
+- **Snippets** for common proto3 constructs
+- **Go to Definition** and **Find References**
+- **Basic Code Completions**
+- **Diagnostics** for errors and warnings
+
+
+### Demo
+
+Below is an example of the extension in action:
+
+![Feature Demo](images/features-demo.gif)
+
+
+## Installation
+
+1. **From Marketplace:**
+   - [Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ianandhum.protobuf-support)
+2. **Manual:**
+   - Download the latest `.vsix` from [Releases](https://github.com/ianandhum/vscode-protobuf-support/releases) and install via `Extensions: Install from VSIX...` in VS Code.
+
+## Getting Started
+
+Open any `.proto` file to activate the extension. Syntax highlighting and snippets work out of the box.
+
+On first use, the extension will prompt to install the `protols` language server automatically.
+
+
+## Configuration
+
+- If `protols` is not installed in your system `PATH`, set the path manually in your VS Code `settings.json`:
+
+  ```json
+  {
+    "protobuf-support.protols.path": "/path/to/protols"
+  }
+  ```
+
+- To install `protols` manually (requires [Rust](https://www.rust-lang.org/tools/install)):
+
+  ```sh
+  cargo install protols
+  ```
 
 ## Requirements
 
-By default, extension will prompt automatic installation of `protols`. 
+- [VS Code](https://code.visualstudio.com/)
+- [protols](https://github.com/coder3101/protols) language server (auto-installed or manual)
 
-You can also install `protols` language server from Rust Crates also, `cargo install protols`
 
-If protols is not installed to standard PATH, configure `protobuf-support.protols.path` in `settings.json`.
 
 ## Attribution
 
-TextMate grammars and basic snippets are sourced from https://github.com/zxh0/vscode-proto3 
+- TextMate grammars and basic snippets are sourced from [zxh0/vscode-proto3](https://github.com/zxh0/vscode-proto3)
+- Language features powered by [coder3101/protols](https://github.com/coder3101/protols)
+
+
+
+## Contributing
+
+Contributions, issues, and feature requests are welcome! Feel free to open an [issue](https://github.com/ianandhum/vscode-protobuf-support/issues) or submit a pull request.
+
+
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+
+
+## Support
+
+For questions or help, open an issue on [GitHub](https://github.com/ianandhum/vscode-protobuf-support/issues).
