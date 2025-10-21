@@ -1,11 +1,10 @@
 
 
-<table>
-<tr>
-<td><img src="images/icon.png" alt="Extension Icon" width="48" height="48"></td>
-<td><h1>Protobuf Language Support for VS Code (Protols)</h1></td>
-</tr>
-</table>
+<h1>
+  <img src="images/icon.png" alt="Extension Icon" width="32" height="32">&nbsp;&nbsp;
+  Protobuf Language Support for VS Code (Protols)
+</h1>
+
 
 [![VS Code Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/ianandhum.protobuf-support)](https://marketplace.visualstudio.com/items?itemName=ianandhum.protobuf-support)
 
