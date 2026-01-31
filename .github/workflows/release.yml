@@ -1,9 +1,13 @@
+name: Release Extension
+
 on:
   push:
     tags:
       - "v*"
 
-name: Deploy Extension
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
