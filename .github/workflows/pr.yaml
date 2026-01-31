@@ -1,0 +1,35 @@
+name: CI - Pull Request
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Compile
+        run: yarn run compile
+
+      - name: Run tests
+        run: xvfb-run -a yarn test
+        if: runner.os == 'Linux'
+
+      - name: Run tests
+        run: yarn test
+        if: runner.os != 'Linux'
