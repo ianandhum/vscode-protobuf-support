@@ -7,10 +7,8 @@ const PROTOLS_CONFIG_PATH = "protobuf-support.protols";
 let protolsServer: ProtolsServer | null = null;
 let protolsInstaller: ProtolsInstaller | null = null;
 
-let shouldCheckForUpdates = true;
-
-async function initAndStartServer(storagePath?: string): Promise<void> {
-	if (storagePath) { 
+async function initProtolsServer(storagePath?: string): Promise<boolean> {
+	if (storagePath) {
 		// (re-)initialize
 		protolsServer = new ProtolsServer({
 			protolsPath: vscode.workspace.getConfiguration(PROTOLS_CONFIG_PATH).get<string>("path") || PROTOLS_EXEC,
@@ -34,48 +32,59 @@ async function initAndStartServer(storagePath?: string): Promise<void> {
 		}
 	}
 
-	if (initSuccess) {
-		const started = await protolsServer.start();
-		if (!started) {
-			vscode.window.showErrorMessage(
-				`Failed to contextstart protols Language Server; ".proto" file features will be unavailable.`,
-			);
-		}
+	return initSuccess;
+}
+
+async function startProtolsServer(): Promise<void> {
+	if (!protolsServer) {
+		throw new Error("Protols server instance is not initialized.");
+	}
+
+	const started = await protolsServer.start();
+	if (!started) {
+		vscode.window.showErrorMessage(
+			`Failed to start protols Language Server; ".proto" file features will be unavailable.`,
+		);
 	}
 }
 
-async function checkAndUpdateProtols(): Promise<boolean> {
-	if (!protolsServer || !protolsServer.isAutoInstalled()) {
-		return false;
+async function initAndStartServer(storagePath?: string): Promise<void> {
+	const initialized = await initProtolsServer(storagePath);
+	if (initialized) {
+		await startProtolsServer();
+	}
+}
+
+async function checkForUpdates(storagePath: string): Promise<void> {
+	if (!protolsServer) {
+		return;
 	}
 
 	protolsInstaller?.checkForUpdatesAndInstall().then(async (updated) => {
 		if (updated) {
-			await initAndStartServer();
+			await initAndStartServer(storagePath);
 
 			vscode.window.showInformationMessage(
 				`protols Language Server has been updated to a new version: '${protolsServer?.getVersion()}'`,
 			);
 		}
 	});
-
-	return true;
 };
 
 export async function activate(context: vscode.ExtensionContext) {
-	await initAndStartServer(context.globalStorageUri.path);
-	checkAndUpdateProtols();
+	const storagePath = context.globalStorageUri.path;
+
+	const initialzed = await initProtolsServer(storagePath);
+	if (initialzed) {
+		startProtolsServer();
+	}
 
 	vscode.window.onDidChangeActiveTextEditor(async (e) => {
 		if (protolsServer !== null && e?.document.languageId === "proto3") {
 			if (!protolsServer.isRunning()) {
-				await initAndStartServer();
-			}
-
-			if (protolsServer.isRunning() && shouldCheckForUpdates) {
-				if (!await checkAndUpdateProtols()) {
-					shouldCheckForUpdates = false;
-				}
+				initAndStartServer();
+			} else if (protolsServer.isAutoInstalled()) {
+				checkForUpdates(storagePath);
 			}
 		}
 	});
@@ -87,10 +96,12 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 
 			await protolsServer.stop();
-			await initAndStartServer(context.globalStorageUri.path);
+			initAndStartServer(storagePath);
 		}
 	});
 
+	// Initial update check
+	checkForUpdates(storagePath);
 }
 
 export function deactivate(): Thenable<void> | undefined {

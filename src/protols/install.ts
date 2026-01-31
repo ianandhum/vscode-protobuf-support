@@ -69,6 +69,10 @@ export class ProtolsInstaller {
     }
 
     public async checkForUpdatesAndInstall(): Promise<boolean> {
+        if (!this.protolsServer.isInstalled()) {
+            return false;
+        }
+
         // Avoid checking for updates too frequently
         if (Date.now() < this.updateCheckSkippedTill) {
             return false;
