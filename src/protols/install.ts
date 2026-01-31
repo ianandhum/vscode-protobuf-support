@@ -52,12 +52,17 @@ export class ProtolsInstaller {
                 }, async () => {
                     await this.githubAssetFetcher.fetchAndInstall();
                 });
+
+                vscode.window.showInformationMessage(
+                    `protols Language Server has been installed successfully.`,
+                );
+
                 return true;
             } catch (err) {
                 console.error(`Error installing protols:`, err);
                 if (err instanceof Error) {
                     vscode.window.showErrorMessage(
-                        `Failed to download protols Language Server; ".proto" file features will be unavailable.\r\n
+                        `Failed to download protols Language Server: \r\n
                      ${err.message}`,
                     );
                 }
@@ -100,7 +105,19 @@ export class ProtolsInstaller {
                         console.warn("Unable to stop protols server gracefully before update.");
                         return false;
                     }
-                    return this.install(true);
+
+                    const installed = await this.install(true);
+                    if (!installed) {
+                        // attempt to start the server again if installation failed, hoping it's still usable
+                        const started = await this.protolsServer.start();
+                        if (!started) {
+                            console.error("Unable to restart protols server after failed update check.");
+                        }
+
+                        return false;
+                    }
+
+                    return true;
                 }
 
                 if (choice === skipAction) {
@@ -142,7 +159,7 @@ export class ProtolsInstaller {
         let dontShowAgainAction = "Dont Show Again";
 
         let selectedAction = await vscode.window.showWarningMessage(
-            `Protols language server is not installed, Download protols from Github?`,
+            `Protols language server is not installed, Download protols from github.com?`,
             installNowAction,
             dontShowAgainAction);
 
@@ -151,6 +168,7 @@ export class ProtolsInstaller {
                 return true;
             case dontShowAgainAction:
                 this.disableInstallDialogue = true;
+                break;
         }
 
         return false;

@@ -63,10 +63,6 @@ async function checkForUpdates(storagePath: string): Promise<void> {
 	protolsInstaller?.checkForUpdatesAndInstall().then(async (updated) => {
 		if (updated) {
 			await initAndStartServer(storagePath);
-
-			vscode.window.showInformationMessage(
-				`protols Language Server has been updated to a new version: '${protolsServer?.getVersion()}'`,
-			);
 		}
 	});
 };
