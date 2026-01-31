@@ -40,7 +40,7 @@ export class ProtolsServer {
 
     private status: Status;
 
-    private autoInstalled?: boolean;
+    private autoInstalled: boolean = false;
 
     private version?: string;
 
@@ -217,7 +217,7 @@ export class ProtolsServer {
     }
 
     public needsInstall(): boolean {
-        return this.status === Status.NotFound;
+        return this.status === Status.NotFound && this.isAutoInstalled();
     }
 
     public getVersion(): string {

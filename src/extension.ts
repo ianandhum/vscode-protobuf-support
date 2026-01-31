@@ -96,8 +96,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	// Initial update check
-	checkForUpdates(storagePath);
+	if (protolsServer?.isAutoInstalled()) {
+		// Initial update check
+		checkForUpdates(storagePath);
+	}
 }
 
 export function deactivate(): Thenable<void> | undefined {

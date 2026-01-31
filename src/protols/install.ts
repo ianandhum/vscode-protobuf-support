@@ -42,8 +42,8 @@ export class ProtolsInstaller {
         this.githubAssetFetcher = new GithubReleaseFetcher(GithubAssetInfo, this.destination);
     }
 
-    public async install(force?: boolean): Promise<boolean> {
-        if (force || await this.getInstallConfirmationFromUser()) {
+    public async install(update: boolean = false): Promise<boolean> {
+        if (update || await this.getInstallConfirmationFromUser()) {
             try {
                 await vscode.window.withProgress({
                     location: vscode.ProgressLocation.Notification,
@@ -54,7 +54,7 @@ export class ProtolsInstaller {
                 });
 
                 vscode.window.showInformationMessage(
-                    `protols Language Server has been installed successfully.`,
+                    `protols Language Server has been ${update ? "updated" : "installed"} successfully.`,
                 );
 
                 return true;
@@ -73,6 +73,32 @@ export class ProtolsInstaller {
         return false;
     }
 
+    private async getLatestVersion(): Promise<string> {
+        let choice: string | undefined;
+        const retryAction = "Retry";
+
+        do {
+            try {
+                let { version } = await this.githubAssetFetcher.getLatestReleaseAsset() || {};
+                if (!version) {
+                    throw new Error(`Unable to fetch latest protols release info from Github.`);
+                }
+
+                return version;
+            } catch (err: any) {
+                console.error(`Error checking for protols updates:`, err);
+                choice = await vscode.window.showErrorMessage(
+                    `Error checking for updates: \r\n 
+                        \n
+                        ${err.message}`,
+                    retryAction
+                );
+            }
+        } while (choice === retryAction);
+
+        return "unknown";
+    }
+
     public async checkForUpdatesAndInstall(): Promise<boolean> {
         if (!this.protolsServer.isInstalled()) {
             return false;
@@ -83,18 +109,18 @@ export class ProtolsInstaller {
             return false;
         }
 
-        try {
-            const { version } = await this.githubAssetFetcher.getLatestReleaseAsset() || {};
-            if (!version) {
-                return false;
-            }
+        const latestVersion = await this.getLatestVersion();
+        if (latestVersion === "unknown") {
+            return false;
+        }
 
-            if (version !== this.protolsServer.getVersion()) {
+        try {
+            if (latestVersion !== this.protolsServer.getVersion()) {
                 const updateAction = "Update Now";
                 const skipAction = "Skip";
 
                 const choice = await vscode.window.showInformationMessage(
-                    `A new version of protols (${version}) is available. Current version: ${this.protolsServer.getVersion()}`,
+                    `A new version of protols (${latestVersion}) is available. Current version: ${this.protolsServer.getVersion()}`,
                     updateAction,
                     skipAction
                 );
@@ -130,7 +156,7 @@ export class ProtolsInstaller {
         } catch (err: any) {
             console.error(`Error checking for protols updates:`, err);
             vscode.window.showErrorMessage(
-                `Error checking for updates: \r\n 
+                `Error while updating protols Language server: \r\n 
                 \n
                 ${err.message}`,
             );
