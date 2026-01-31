@@ -34,6 +34,8 @@ export class ProtolsInstaller {
     private destination: string;
     private githubAssetFetcher: GithubReleaseFetcher;
 
+    private updateCheckSkippedTill = Date.now();
+
     constructor(protolsServer: ProtolsServer) {
         this.protolsServer = protolsServer;
         this.destination = protolsServer.getConfig().storagePath;
@@ -67,6 +69,11 @@ export class ProtolsInstaller {
     }
 
     public async checkForUpdatesAndInstall(): Promise<boolean> {
+        // Avoid checking for updates too frequently
+        if (Date.now() < this.updateCheckSkippedTill) {
+            return false;
+        }
+
         try {
             const { version } = await this.githubAssetFetcher.getLatestReleaseAsset() || {};
             if (!version) {
@@ -84,16 +91,37 @@ export class ProtolsInstaller {
                 );
 
                 if (choice === updateAction) {
-                    await this.protolsServer.stopServer(); // Stop the server before updating
+                    const stopped = await this.protolsServer.stop(); // Stop the server before updating
+                    if (!stopped) {
+                        console.warn("Unable to stop protols server gracefully before update.");
+                        return false;
+                    }
                     return this.install(true);
                 }
+
+                if (choice === skipAction) {
+                    // Skip checking for updates for the next 24 hours
+                    this.updateCheckSkippedTill = Date.now() + 24 * 60 * 60 * 1000;
+                }
+
+                return false;
             }
         } catch (err: any) {
             console.error(`Error checking for protols updates:`, err);
             vscode.window.showErrorMessage(
-                `Failed to download protols Language Server; ".proto" file features will be unavailable.\r\n
-                     ${err.message}`,
+                `Error checking for updates: \r\n 
+                \n
+                ${err.message}`,
             );
+
+            // avoid updating for 1 hour
+            this.updateCheckSkippedTill = Date.now() + 1 * 60 * 60 * 1000;
+
+            // attempt to start the server again if it was stopped
+            const started = await this.protolsServer.start();
+            if (!started) {
+                console.error("Unable to restart protols server after failed update check.");
+            }
         }
 
         return false;

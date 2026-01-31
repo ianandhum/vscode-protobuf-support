@@ -2,6 +2,11 @@ import which from 'which';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as os from 'os';
+import path from 'path';
+import { promisify } from 'util';
+import { execFile } from 'child_process';
+import find from "find-process";
+
 
 import {
     LanguageClient,
@@ -9,19 +14,15 @@ import {
     ServerOptions,
     TransportKind
 } from 'vscode-languageclient/node';
-import path from 'path';
-import { promisify } from 'util';
-import { execFile } from 'child_process';
 
 
 export const PROTOLS_EXEC = "protols";
 
 export enum Status {
     UnInitialized,
-    NotInstalled,
-    Ok,
-    Invalid,
     NotFound,
+    Invalid,
+    Ok,
 }
 
 export interface Command {
@@ -58,55 +59,59 @@ export class ProtolsServer {
         return this.config;
     }
 
-    public async initServer(force?: boolean): Promise<boolean> {
-
+    public async init(force: boolean = false): Promise<boolean> {
         if (!force && this.status === Status.Ok && this.command) {
             return true;
         }
 
         if (force && this.isRunning()) {
-            await this.stopServer();
+            await this.stop();
         }
 
         let resolvedProtolsPath: string = this.config.protolsPath || PROTOLS_EXEC;
-        let autoInstalled = false;
 
         if (resolvedProtolsPath !== PROTOLS_EXEC) {
-            let status = this.getBinaryStatus(resolvedProtolsPath);
-            this.status = status;
-            if (status !== Status.Ok) {
-                vscode.window.showErrorMessage(
-                    `Protols server binary: '${resolvedProtolsPath}' is ${status === Status.NotFound ? "missing" : "not executable"}, check config.`,
-                );
-                return false;
-            }
+            this.status = this.getBinaryStatus(resolvedProtolsPath);
         } else {
             let binPath = await which(PROTOLS_EXEC, { nothrow: true });
             if (binPath === null) {
                 resolvedProtolsPath = path.join(this.config.storagePath, this.getProtolsPlatformBinaryName());
-                let status = this.getBinaryStatus(resolvedProtolsPath);
-                if (status === Status.NotFound) {
-                    this.status = Status.NotInstalled;
+                this.status = this.getBinaryStatus(resolvedProtolsPath);
+                this.autoInstalled = true;
+
+                if (this.status !== Status.Ok) {
+                    console.log(`Protols binary not found in $PATH:`);
                     return false;
                 }
-                autoInstalled = true;
+
+            } else {
+                // 'which()' already checks for executable permission
+                resolvedProtolsPath = binPath;
+                this.status = this.getBinaryStatus(binPath);
             }
         }
 
-        let protolsArgs: string[] = this.config.protolsArgs || [];
+        if (this.status !== Status.Ok) {
+            if (!this.isAutoInstalled()) {
+                vscode.window.showErrorMessage(
+                    `Protols server binary: '${resolvedProtolsPath}' is 
+                        ${this.status === Status.NotFound ? "missing" :
+                        "not executable"}, check protols configuration`,
+                );
+            }
+            return false;
+        }
 
-        this.status = Status.Ok;
-        this.autoInstalled = autoInstalled;
         this.version = await this.getCurrentVersion(resolvedProtolsPath);
         this.command = {
             command: resolvedProtolsPath,
-            args: protolsArgs
+            args: this.config.protolsArgs || []
         };
 
         return true;
     }
 
-    public async startServer(): Promise<boolean> {
+    public async start(): Promise<boolean> {
         if (this.status !== Status.Ok || !this.command) {
             console.log("Protols server is not installed or command is missing.");
             return false;
@@ -149,9 +154,9 @@ export class ProtolsServer {
         return true;
     }
 
-    public async stopServer() {
+    public async stop(): Promise<boolean> {
         if (this.status !== Status.Ok || !this.command) {
-            return;
+            return true;
         }
 
         if (this.client) {
@@ -159,35 +164,48 @@ export class ProtolsServer {
                 await this.client.stop();
             } catch (error) {
                 console.error("Error stopping protols server:", error);
-                // FIXME: protols has not implemented shutdown correctly
-                // See: https://github.com/coder3101/protols/issues/101
-                // As a workaround, we ignore errors during shutdown
+
+                // Attempt to kill any remaining protols processes
+                // due a bug in protols versions prior to 0.13.2 because of improper shutdown handling
+
+                await find("name", this.getProtolsPlatformBinaryName()).then((list) => {
+                    list.forEach((proc) => {
+                        try {
+                            process.kill(proc.pid);
+                            console.log(`Killed protols server process with PID: ${proc.pid}`);
+                        } catch (err) {
+                            console.error(`Failed to kill protols server process with PID: ${proc.pid}`, err);
+                        }
+                    });
+                });
+
+                this.client = undefined;
+                return true;
             }
-
-
-            this.client = undefined;
         }
+
+        return false;
     }
 
-    public restartServer() {
+    public restart() {
         if (this.status !== Status.Ok || !this.command) {
             return;
         }
 
         if (!this.client) {
             console.log("Protols server is not running.");
-            this.startServer();
+            this.start();
             return;
         }
 
 
-        this.stopServer().then(() => {
-            this.startServer();
+        this.stop().then(() => {
+            this.start();
         });
     }
 
     public isRunning(): boolean {
-        if (this.status !== Status.Ok || !this.command) {
+        if (this.status !== Status.Ok) {
             return false;
         }
 
@@ -198,8 +216,8 @@ export class ProtolsServer {
         return this.status === Status.Ok;
     }
 
-    public canAutoInstall(): boolean {
-        return this.status === Status.NotInstalled;
+    public needsInstall(): boolean {
+        return this.status === Status.NotFound;
     }
 
     public getVersion(): string {
@@ -246,7 +264,7 @@ export class ProtolsServer {
     private async getCurrentVersion(command: string): Promise<string> {
         try {
             const { stdout } = await ProtolsServer.execFileAsync(command, ['--version']);
-            const versionParts = stdout.split("\n")[0].trim().split(' ');
+            const versionParts = stdout.split("\n", 1)[0].trim().split(' ');
             if (versionParts.length > 1) {
                 return versionParts[1].trim();
             }

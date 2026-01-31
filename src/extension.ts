@@ -5,59 +5,78 @@ import { ProtolsInstaller } from './protols/install';
 const PROTOLS_CONFIG_PATH = "protobuf-support.protols";
 
 let protolsServer: ProtolsServer | null = null;
+let protolsInstaller: ProtolsInstaller | null = null;
 
-function newProtolsServerFromConfig(context: vscode.ExtensionContext): ProtolsServer {
-	return new ProtolsServer({
-		protolsPath: vscode.workspace.getConfiguration().get<string>(PROTOLS_CONFIG_PATH + ".path") || PROTOLS_EXEC,
-		protolsArgs: vscode.workspace.getConfiguration().get<string[]>(PROTOLS_CONFIG_PATH + ".args") || [],
-		storagePath: context.globalStorageUri.path,
-	});
+let shouldCheckForUpdates = true;
+
+async function initAndStartServer(storagePath?: string): Promise<void> {
+	if (storagePath) { 
+		// (re-)initialize
+		protolsServer = new ProtolsServer({
+			protolsPath: vscode.workspace.getConfiguration(PROTOLS_CONFIG_PATH).get<string>("path") || PROTOLS_EXEC,
+			protolsArgs: vscode.workspace.getConfiguration(PROTOLS_CONFIG_PATH).get<string[]>("args") || [],
+			storagePath: storagePath,
+		});
+		protolsInstaller = new ProtolsInstaller(protolsServer);
+	}
+
+	if (!protolsServer) {
+		throw new Error("Protols server instance is not initialized.");
+	}
+
+	let initSuccess = await protolsServer.init();
+
+	if (!initSuccess && protolsServer.needsInstall() && protolsInstaller) {
+		const installed = await protolsInstaller.install();
+
+		if (installed) {
+			initSuccess = await protolsServer.init(true);
+		}
+	}
+
+	if (initSuccess) {
+		const started = await protolsServer.start();
+		if (!started) {
+			vscode.window.showErrorMessage(
+				`Failed to contextstart protols Language Server; ".proto" file features will be unavailable.`,
+			);
+		}
+	}
 }
 
+async function checkAndUpdateProtols(): Promise<boolean> {
+	if (!protolsServer || !protolsServer.isAutoInstalled()) {
+		return false;
+	}
+
+	protolsInstaller?.checkForUpdatesAndInstall().then(async (updated) => {
+		if (updated) {
+			await initAndStartServer();
+
+			vscode.window.showInformationMessage(
+				`protols Language Server has been updated to a new version: '${protolsServer?.getVersion()}'`,
+			);
+		}
+	});
+
+	return true;
+};
 
 export async function activate(context: vscode.ExtensionContext) {
-	protolsServer = newProtolsServerFromConfig(context);
-
-	let initAndStartServer = async () => {
-		if (!protolsServer) {
-			console.log("BUG: Protols server instance is null");
-			return;
-		}
-
-		let initSuccess = await protolsServer.initServer();
-		let installer = new ProtolsInstaller(protolsServer);
-
-		if (!initSuccess && protolsServer.canAutoInstall()) {
-			const installed = await installer.install();
-			if (installed) {
-				initSuccess = await protolsServer.initServer(true);
-			}
-		}
-
-		if (initSuccess) {
-			const started = await protolsServer.startServer();
-			if (!started) {
-				vscode.window.showErrorMessage(
-					`Failed to start protols Language Server; ".proto" file features will be unavailable.`,
-				);
-			}
-		}
-
-		installer.checkForUpdatesAndInstall().then((updated) => {
-			if (updated) {
-				protolsServer = newProtolsServerFromConfig(context);
-				vscode.window.showInformationMessage(
-					`protols Language Server has been updated to a new version: ${protolsServer?.getVersion()}'`,
-				);
-			}
-		});
-	};
-
-	await initAndStartServer();
+	await initAndStartServer(context.globalStorageUri.path);
+	checkAndUpdateProtols();
 
 	vscode.window.onDidChangeActiveTextEditor(async (e) => {
-		if (!protolsServer?.isRunning() && e?.document.languageId === "proto3") {
-			await initAndStartServer();
+		if (protolsServer !== null && e?.document.languageId === "proto3") {
+			if (!protolsServer.isRunning()) {
+				await initAndStartServer();
+			}
+
+			if (protolsServer.isRunning() && shouldCheckForUpdates) {
+				if (!await checkAndUpdateProtols()) {
+					shouldCheckForUpdates = false;
+				}
+			}
 		}
 	});
 
@@ -67,15 +86,14 @@ export async function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			await protolsServer.stopServer();
-			protolsServer = newProtolsServerFromConfig(context);
-
-			await initAndStartServer();
+			await protolsServer.stop();
+			await initAndStartServer(context.globalStorageUri.path);
 		}
 	});
 
 }
 
 export function deactivate(): Thenable<void> | undefined {
-	return protolsServer?.stopServer();
+	protolsServer?.stop();
+	return undefined;
 }
