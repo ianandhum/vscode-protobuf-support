@@ -35,7 +35,7 @@ Below is an example of the extension in action:
 ## Installation
 
 1. **From Marketplace:**
-   - [Install from VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ianandhum.protobuf-support)
+   - Install from [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ianandhum.protobuf-support) OR [Open VSX Marketplace](https://open-vsx.org/extension/ianandhum/protobuf-support)
 2. **Manual:**
    - Download the latest `.vsix` from [Releases](https://github.com/ianandhum/vscode-protobuf-support/releases) and install via `Extensions: Install from VSIX...` in VS Code.
 
@@ -64,7 +64,7 @@ On first use, the extension will prompt to install the `protols` language server
 
 ## Requirements
 
-- [VS Code](https://code.visualstudio.com/)
+- [VS Code](https://code.visualstudio.com/) or any https://open-vsx.org supported IDE
 - [protols](https://github.com/coder3101/protols) language server (auto-installed or manual)
 
 
