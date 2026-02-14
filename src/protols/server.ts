@@ -156,7 +156,7 @@ export class ProtolsServer {
 
     public async stop(): Promise<boolean> {
         if (this.status !== Status.Ok || !this.command) {
-            return true;
+            return false;
         }
 
         if (this.client) {
@@ -168,11 +168,13 @@ export class ProtolsServer {
                 // Attempt to kill any remaining protols processes
                 // due a bug in protols versions prior to 0.13.2 because of improper shutdown handling
 
+                let killed = false;
                 await find("name", this.getProtolsPlatformBinaryName()).then((list) => {
                     list.forEach((proc) => {
                         try {
                             process.kill(proc.pid);
                             console.log(`Killed protols server process with PID: ${proc.pid}`);
+                            killed = true;
                         } catch (err) {
                             console.error(`Failed to kill protols server process with PID: ${proc.pid}`, err);
                         }
@@ -180,11 +182,11 @@ export class ProtolsServer {
                 });
 
                 this.client = undefined;
-                return true;
+                return killed;
             }
         }
-
-        return false;
+        
+        return true;
     }
 
     public restart() {

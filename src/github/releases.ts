@@ -15,6 +15,10 @@ export interface GithubAsset {
     fileName: string;
 }
 
+interface ProgressReporter{
+    report: (progress: {message: string, increment?: number}) => void;
+}
+
 export class GithubReleaseFetcher {
 
     private asset: GithubAsset;
@@ -48,7 +52,8 @@ export class GithubReleaseFetcher {
         }
     }
 
-    public async fetchAndInstall(): Promise<void> {
+    public async fetchAndInstall(reporter?: ProgressReporter): Promise<void> {
+        reporter?.report({ message: `Fetching latest release info for ${this.asset.repo}...` });
         const {url} = await this.getLatestReleaseAsset() || {};
         if (!url) {
             throw new Error(`Asset: ${this.asset.assetName} not found in latest release of ${this.asset.owner}/${this.asset.repo}`);
@@ -56,9 +61,11 @@ export class GithubReleaseFetcher {
 
         const destinationCompressedFile = path.join(this.destination, this.asset.assetName);
       
+        reporter?.report({ message: `Downloading ${this.asset.assetName}...` });
         // Download the asset
         await GithubReleaseFetcher.downloadFileFromURL(url, destinationCompressedFile);
         
+        reporter?.report({ message: `Extracting ${this.asset.assetName}...` });
         // Extract the downloaded file
         await decompress(destinationCompressedFile, this.destination);
 
