@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.4](https://github.com/ianandhum/vscode-protobuf-support/compare/v1.5.3...v1.5.4) (2026-02-14)
+
+
+### Bug Fixes
+
+* noop while language server update action ([57c6d5b](https://github.com/ianandhum/vscode-protobuf-support/commits/57c6d5bc86287a58efa45615e2b962277484cd20))
+* show progress report during lsp update ([0fbb91a](https://github.com/ianandhum/vscode-protobuf-support/commits/0fbb91a5196395c8dfb05bf150ec387ac0993f27))
+
 ### [1.5.3](https://github.com/ianandhum/vscode-protobuf-support/compare/v1.5.2...v1.5.3) (2026-01-31)
 
 ### [1.5.2](https://github.com/ianandhum/vscode-protobuf-support/compare/v1.5.1...v1.5.2) (2026-01-31)
