@@ -44,30 +44,42 @@ export class ProtolsInstaller {
 
     public async install(update: boolean = false): Promise<boolean> {
         if (update || await this.getInstallConfirmationFromUser()) {
-            try {
-                await vscode.window.withProgress({
+
+            const installed = await vscode.window.withProgress(
+                {
                     location: vscode.ProgressLocation.Notification,
                     title: "Downloading protols Language Server",
                     cancellable: false
-                }, async () => {
-                    await this.githubAssetFetcher.fetchAndInstall();
-                });
+                }, async (progress) => {
 
+                    let choice: string | undefined;
+                    const retryAction = "Retry";
+                    do {
+                        try {
+                            progress.report({ message: update ? "Updating protols..." : "Installing protols..." });
+                            await this.githubAssetFetcher.fetchAndInstall(progress);
+
+                            return true;
+                        } catch (err) {
+                            console.error(`Error installing protols:`, err);
+                            if (err instanceof Error) {
+                                choice = await vscode.window.showErrorMessage(
+                                    `Failed to download protols Language Server: \r\n ${err.message}`,
+                                    retryAction
+                                );
+                            }
+                        }
+                    } while (choice === retryAction);
+                    return false;
+                }
+            );
+
+            if (installed) {
                 vscode.window.showInformationMessage(
                     `protols Language Server has been ${update ? "updated" : "installed"} successfully.`,
                 );
-
-                return true;
-            } catch (err) {
-                console.error(`Error installing protols:`, err);
-                if (err instanceof Error) {
-                    vscode.window.showErrorMessage(
-                        `Failed to download protols Language Server: \r\n
-                     ${err.message}`,
-                    );
-                }
-                return false;
             }
+            return installed;
         }
 
         return false;
