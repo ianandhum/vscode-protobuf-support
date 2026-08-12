@@ -7,7 +7,10 @@ const PROTOLS_CONFIG_PATH = "protobuf-support.protols";
 let protolsServer: ProtolsServer | null = null;
 let protolsInstaller: ProtolsInstaller | null = null;
 
-async function initProtolsServer(storagePath?: string): Promise<boolean> {
+async function initProtolsServer(
+	storagePath?: string,
+	globalState?: vscode.Memento,
+): Promise<boolean> {
 	if (storagePath) {
 		// (re-)initialize
 		protolsServer = new ProtolsServer({
@@ -15,7 +18,10 @@ async function initProtolsServer(storagePath?: string): Promise<boolean> {
 			protolsArgs: vscode.workspace.getConfiguration(PROTOLS_CONFIG_PATH).get<string[]>("args") || [],
 			storagePath: storagePath,
 		});
-		protolsInstaller = new ProtolsInstaller(protolsServer);
+		if (!globalState) {
+			throw new Error("Extension global state is not initialized.");
+		}
+		protolsInstaller = new ProtolsInstaller(protolsServer, globalState);
 	}
 
 	if (!protolsServer) {
@@ -48,21 +54,27 @@ async function startProtolsServer(): Promise<void> {
 	}
 }
 
-async function initAndStartServer(storagePath?: string): Promise<void> {
-	const initialized = await initProtolsServer(storagePath);
+async function initAndStartServer(
+	storagePath?: string,
+	globalState?: vscode.Memento,
+): Promise<void> {
+	const initialized = await initProtolsServer(storagePath, globalState);
 	if (initialized) {
 		await startProtolsServer();
 	}
 }
 
-async function checkForUpdates(storagePath: string): Promise<void> {
+async function checkForUpdates(
+	storagePath: string,
+	globalState: vscode.Memento,
+): Promise<void> {
 	if (!protolsServer) {
 		return;
 	}
 
 	protolsInstaller?.checkForUpdatesAndInstall().then(async (updated) => {
 		if (updated) {
-			await initAndStartServer(storagePath);
+			await initAndStartServer(storagePath, globalState);
 		}
 	});
 };
@@ -70,7 +82,7 @@ async function checkForUpdates(storagePath: string): Promise<void> {
 export async function activate(context: vscode.ExtensionContext) {
 	const storagePath = context.globalStorageUri.path;
 
-	const initialzed = await initProtolsServer(storagePath);
+	const initialzed = await initProtolsServer(storagePath, context.globalState);
 	if (initialzed) {
 		startProtolsServer();
 	}
@@ -78,9 +90,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	vscode.window.onDidChangeActiveTextEditor(async (e) => {
 		if (protolsServer !== null && e?.document.languageId === "proto3") {
 			if (!protolsServer.isRunning()) {
-				initAndStartServer();
+				initAndStartServer(undefined, context.globalState);
 			} else if (protolsServer.isAutoInstalled()) {
-				checkForUpdates(storagePath);
+				checkForUpdates(storagePath, context.globalState);
 			}
 		}
 	});
@@ -92,13 +104,13 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 
 			await protolsServer.stop();
-			initAndStartServer(storagePath);
+			initAndStartServer(storagePath, context.globalState);
 		}
 	});
 
 	if (protolsServer?.isAutoInstalled()) {
 		// Initial update check
-		checkForUpdates(storagePath);
+		checkForUpdates(storagePath, context.globalState);
 	}
 }
 

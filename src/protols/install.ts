@@ -3,6 +3,7 @@ import * as os from 'os';
 import { ProtolsServer } from './server';
 import { GithubAsset, GithubReleaseFetcher } from '../github/releases';
 
+export const PROTOLS_INSTALL_PROMPT_DISABLED_KEY = 'protols.installPromptDisabled';
 
 const GithubAssetInfo: GithubAsset = {
     owner: "coder3101",
@@ -36,7 +37,10 @@ export class ProtolsInstaller {
 
     private updateCheckSkippedTill = Date.now();
 
-    constructor(protolsServer: ProtolsServer) {
+    constructor(
+        protolsServer: ProtolsServer,
+        private readonly globalState: vscode.Memento,
+    ) {
         this.protolsServer = protolsServer;
         this.destination = protolsServer.getConfig().storagePath;
         this.githubAssetFetcher = new GithubReleaseFetcher(GithubAssetInfo, this.destination);
@@ -186,17 +190,15 @@ export class ProtolsInstaller {
         return false;
     }
 
-    private disableInstallDialogue = false;
-
     private async getInstallConfirmationFromUser(): Promise<boolean> {
-        if (this.disableInstallDialogue) {
+        if (this.globalState.get<boolean>(PROTOLS_INSTALL_PROMPT_DISABLED_KEY, false)) {
             return false;
         }
 
-        let installNowAction = "Install Now";
-        let dontShowAgainAction = "Dont Show Again";
+        const installNowAction = "Install Now";
+        const dontShowAgainAction = "Don't Show Again";
 
-        let selectedAction = await vscode.window.showWarningMessage(
+        const selectedAction = await vscode.window.showWarningMessage(
             `Protols language server is not installed, Download protols from github.com?`,
             installNowAction,
             dontShowAgainAction);
@@ -205,7 +207,7 @@ export class ProtolsInstaller {
             case installNowAction:
                 return true;
             case dontShowAgainAction:
-                this.disableInstallDialogue = true;
+                await this.globalState.update(PROTOLS_INSTALL_PROMPT_DISABLED_KEY, true);
                 break;
         }
 
