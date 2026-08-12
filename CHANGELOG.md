@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.5.5](https://github.com/ianandhum/vscode-protobuf-support/compare/v1.5.4...v1.5.5) (2026-08-12)
+
+
+### Bug Fixes
+
+* persist don't show again preference on protols install prompt ([70b570d](https://github.com/ianandhum/vscode-protobuf-support/commits/70b570d8f2a8c4eec31bd7a73dfe6f5ff12bf343))
+
 ### [1.5.4](https://github.com/ianandhum/vscode-protobuf-support/compare/v1.5.3...v1.5.4) (2026-02-14)
 
 
